@@ -9,7 +9,12 @@ const UseBookSearch = (query, pageNumber) => {
     const [hasMore, setHasMore] = useState(false)
 
     useEffect(() => {
+        setBooks([])
+    }, [query])
+
+    useEffect(() => {
         let cancel;
+        console.log(query)
         setLoading(true);
         setError(false);
         axios({
@@ -23,7 +28,7 @@ const UseBookSearch = (query, pageNumber) => {
         })
         .then(({ data }) => {
             setBooks(prevBooks =>  
-                [...new Set([...prevBooks, data.docs.map(b => b.title)])])
+                [...new Set([...prevBooks, ...data.docs.map(b => b.title)])])
 
             setHasMore(data.docs.length > 0)
             setLoading(false)

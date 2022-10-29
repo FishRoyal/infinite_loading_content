@@ -1,4 +1,5 @@
-import { useRef, useState, React} from "react";
+import { useCallback } from "react";
+import { useRef, useState, React } from "react";
 import useBookSearch from "./useBookSearch"
 
 
@@ -12,7 +13,21 @@ const App = () => {
         setPageNumber(1)
     }
 
-    const {books, error, loading, hasMore} = useBookSearch(text, pageNumber)
+    const observer = useRef()
+
+    const {books, error, loading, hasMore} = useBookSearch(text, pageNumber);
+
+    const lastBookCallback = useCallback((node) => {
+        if(loading) return;
+        if(observer.current) observer.current.disconnect();
+        observer.current = new IntersectionObserver(entries => {
+            if(entries[0].isIntersecting && hasMore) {
+                setPageNumber(prevPage => prevPage + 1)
+            }
+        })
+        if(node) observer.current.observe(node);
+    }, [loading, hasMore])
+
     return (
         <>
             <input type="text" 
@@ -23,7 +38,9 @@ const App = () => {
                 
             {
                 books.map((book, i) => {
-                    return <div key={i}>{book}</div>
+                    if(i + 1 === books.length)
+                        return <div ref={lastBookCallback} key={i}>{book}</div>
+                    else return <div key={i}>{book}</div>
                 })
             }
             <div>{loading ? "Loading..." : ""}</div>
